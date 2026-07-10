@@ -19,7 +19,7 @@ export const saveUser = async (
     const user = await UserModel.findOneAndUpdate(
       { uid },
       { $setOnInsert: { uid } },
-      { upsert: true, new: true, runValidators: true },
+      { upsert: true, returnDocument: "after", runValidators: true },
     );
 
     response.status(201).json(user);

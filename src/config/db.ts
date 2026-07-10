@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 /**
  * Cached connection for serverless (Vercel). Reuses the same mongoose
@@ -28,7 +28,7 @@ export async function connectDB(): Promise<typeof mongoose> {
 
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    throw new Error('MONGODB_URI environment variable is not set');
+    throw new Error("MONGODB_URI environment variable is not set");
   }
 
   if (!cached.promise) {
