@@ -14,6 +14,10 @@ const cardSchema = new Schema(
       ref: "UserCollection",
       default: null,
     },
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
     name: {
       type: String,
       required: true,
@@ -59,6 +63,7 @@ const cardSchema = new Schema(
 
 cardSchema.index({ ownerId: 1, createdAt: -1 });
 cardSchema.index({ ownerId: 1, collectionId: 1 });
+cardSchema.index({ ownerId: 1, isFavorite: 1 });
 
 export type Card = InferSchemaType<typeof cardSchema>;
 

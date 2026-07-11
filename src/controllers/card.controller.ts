@@ -120,6 +120,7 @@ export const updateCard = async (
     const { cardId } = request.params;
     const {
       collectionId,
+      isFavorite,
       name,
       setName,
       rarity,
@@ -134,6 +135,7 @@ export const updateCard = async (
       {
         $set: {
           collectionId,
+          isFavorite,
           name,
           setName,
           rarity,
