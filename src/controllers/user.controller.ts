@@ -28,3 +28,24 @@ export const saveUser = async (
     response.status(500).json({ error: "Failed to save user" });
   }
 };
+
+export const getUser = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  try {
+    const { uid } = request.params;
+
+    const user = await UserModel.findOne({ uid });
+
+    if (!user) {
+      response.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    response.status(200).json(user);
+  } catch (error) {
+    console.error("Failed to get user:", error);
+    response.status(500).json({ error: "Failed to get user" });
+  }
+};
