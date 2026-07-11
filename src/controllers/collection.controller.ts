@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { Error as MongooseError } from "mongoose";
 
+import { CardModel } from "../models/card.model";
 import { UserCollectionModel } from "../models/user-collection.model";
 
 const handleCollectionError = (
@@ -115,7 +116,7 @@ export const deleteCollection = async (
     const ownerId = request.query.ownerId as string;
     const { collectionId } = request.params;
 
-    const collection = await UserCollectionModel.findOneAndDelete({
+    const collection = await UserCollectionModel.findOne({
       _id: collectionId,
       ownerId,
     });
@@ -124,6 +125,12 @@ export const deleteCollection = async (
       response.status(404).json({ error: "Collection not found" });
       return;
     }
+
+    await CardModel.updateMany(
+      { ownerId, collectionId },
+      { $set: { collectionId: null } },
+    );
+    await collection.deleteOne();
 
     response.status(204).send();
   } catch (error) {

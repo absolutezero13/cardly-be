@@ -1,7 +1,15 @@
 import { Router, type RequestHandler } from "express";
 import multer from "multer";
 
-import { scanCard } from "../controllers/card.controller";
+import {
+  createCard,
+  deleteCard,
+  getCard,
+  listCards,
+  scanCard,
+  updateCard,
+} from "../controllers/card.controller";
+import { requireDb } from "../middleware/requireDb";
 
 const MAX_CARD_IMAGE_BYTES = Number(
   process.env.MAX_CARD_IMAGE_BYTES ?? 2 * 1024 * 1024,
@@ -69,5 +77,10 @@ const uploadCardImages: RequestHandler = (request, response, next) => {
 const cardRouter = Router();
 
 cardRouter.post("/cards/scan", uploadCardImages, scanCard);
+cardRouter.post("/cards", requireDb, createCard);
+cardRouter.get("/cards", requireDb, listCards);
+cardRouter.get("/cards/:cardId", requireDb, getCard);
+cardRouter.patch("/cards/:cardId", requireDb, updateCard);
+cardRouter.delete("/cards/:cardId", requireDb, deleteCard);
 
 export default cardRouter;

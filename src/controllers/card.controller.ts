@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
+import { Error as MongooseError } from "mongoose";
 
+import { CardModel } from "../models/card.model";
 import {
   analyzeCard,
   CardNotIdentifiedError,
@@ -12,6 +14,167 @@ type CardUploadRequest = Request & {
     front?: Express.Multer.File[];
     back?: Express.Multer.File[];
   };
+};
+
+const handleCardDatabaseError = (
+  response: Response,
+  error: unknown,
+  action: string,
+): void => {
+  if (
+    error instanceof MongooseError.ValidationError ||
+    error instanceof MongooseError.CastError
+  ) {
+    response.status(400).json({ error: error.message });
+    return;
+  }
+
+  console.error(`Failed to ${action} card:`, error);
+  response.status(500).json({ error: `Failed to ${action} card` });
+};
+
+export const createCard = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  try {
+    const {
+      ownerId,
+      collectionId,
+      name,
+      setName,
+      rarity,
+      price,
+      confidence,
+      frontImageUrl,
+      backImageUrl,
+    } = request.body;
+
+    const card = await CardModel.create({
+      ownerId,
+      collectionId,
+      name,
+      setName,
+      rarity,
+      price,
+      confidence,
+      frontImageUrl,
+      backImageUrl,
+    });
+
+    response.status(201).json(card);
+  } catch (error) {
+    handleCardDatabaseError(response, error, "create");
+  }
+};
+
+export const listCards = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  try {
+    const ownerId = request.query.ownerId as string;
+    const collectionId = request.query.collectionId as string | undefined;
+    const filter =
+      collectionId === undefined
+        ? { ownerId }
+        : {
+            ownerId,
+            collectionId: collectionId === "null" ? null : collectionId,
+          };
+
+    const cards = await CardModel.find(filter).sort({ createdAt: -1 });
+
+    response.status(200).json(cards);
+  } catch (error) {
+    handleCardDatabaseError(response, error, "list");
+  }
+};
+
+export const getCard = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  try {
+    const ownerId = request.query.ownerId as string;
+    const { cardId } = request.params;
+    const card = await CardModel.findOne({ _id: cardId, ownerId });
+
+    if (!card) {
+      response.status(404).json({ error: "Card not found" });
+      return;
+    }
+
+    response.status(200).json(card);
+  } catch (error) {
+    handleCardDatabaseError(response, error, "get");
+  }
+};
+
+export const updateCard = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  try {
+    const ownerId = request.query.ownerId as string;
+    const { cardId } = request.params;
+    const {
+      collectionId,
+      name,
+      setName,
+      rarity,
+      price,
+      confidence,
+      frontImageUrl,
+      backImageUrl,
+    } = request.body;
+
+    const card = await CardModel.findOneAndUpdate(
+      { _id: cardId, ownerId },
+      {
+        $set: {
+          collectionId,
+          name,
+          setName,
+          rarity,
+          price,
+          confidence,
+          frontImageUrl,
+          backImageUrl,
+        },
+      },
+      { returnDocument: "after", runValidators: true },
+    );
+
+    if (!card) {
+      response.status(404).json({ error: "Card not found" });
+      return;
+    }
+
+    response.status(200).json(card);
+  } catch (error) {
+    handleCardDatabaseError(response, error, "update");
+  }
+};
+
+export const deleteCard = async (
+  request: Request,
+  response: Response,
+): Promise<void> => {
+  try {
+    const ownerId = request.query.ownerId as string;
+    const { cardId } = request.params;
+    const card = await CardModel.findOneAndDelete({ _id: cardId, ownerId });
+
+    if (!card) {
+      response.status(404).json({ error: "Card not found" });
+      return;
+    }
+
+    response.status(204).send();
+  } catch (error) {
+    handleCardDatabaseError(response, error, "delete");
+  }
 };
 
 export const scanCard = async (
