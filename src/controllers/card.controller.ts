@@ -8,6 +8,7 @@ import {
   InvalidGeminiResponseError,
   isGeminiUnavailableError,
 } from "../services/cardAnalysis.service";
+import { getAuthUid } from "../types/auth";
 
 type CardUploadRequest = Request & {
   files?: {
@@ -38,8 +39,8 @@ export const createCard = async (
   response: Response,
 ): Promise<void> => {
   try {
+    const ownerId = getAuthUid(request);
     const {
-      ownerId,
       collectionId,
       name,
       setName,
@@ -73,7 +74,7 @@ export const listCards = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const ownerId = request.query.ownerId as string;
+    const ownerId = getAuthUid(request);
     const collectionId = request.query.collectionId as string | undefined;
     const filter =
       collectionId === undefined
@@ -96,7 +97,7 @@ export const getCard = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const ownerId = request.query.ownerId as string;
+    const ownerId = getAuthUid(request);
     const { cardId } = request.params;
     const card = await CardModel.findOne({ _id: cardId, ownerId });
 
@@ -116,7 +117,7 @@ export const updateCard = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const ownerId = request.query.ownerId as string;
+    const ownerId = getAuthUid(request);
     const { cardId } = request.params;
     const {
       collectionId,
@@ -164,7 +165,7 @@ export const deleteCard = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const ownerId = request.query.ownerId as string;
+    const ownerId = getAuthUid(request);
     const { cardId } = request.params;
     const card = await CardModel.findOneAndDelete({ _id: cardId, ownerId });
 
@@ -228,7 +229,7 @@ export const scanCard = async (
       error instanceof Error ? error.message : error,
     );
     response.status(500).json({
-      error: "Failed to analyze card",
+      error: "Card analysis failed",
       code: "CARD_ANALYSIS_FAILED",
     });
   }

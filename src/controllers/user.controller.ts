@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 
 import { UserCollectionModel } from "../models/user-collection.model";
 import { UserModel } from "../models/user.model";
+import { getAuthUid } from "../types/auth";
 
 const DEFAULT_COLLECTION_NAMES = ["Football", "Basketball", "Baseball"];
 
@@ -28,11 +29,11 @@ export const saveUser = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const { uid } = request.body as { uid: string };
+    const uid = getAuthUid(request);
 
     const result = await UserModel.findOneAndUpdate(
-      { uid: uid },
-      { $setOnInsert: { uid: uid } },
+      { uid },
+      { $setOnInsert: { uid } },
       {
         upsert: true,
         returnDocument: "after",
@@ -63,9 +64,15 @@ export const getUser = async (
   response: Response,
 ): Promise<void> => {
   try {
+    const authUid = getAuthUid(request);
     const { uid } = request.params;
 
-    const user = await UserModel.findOne({ uid });
+    if (uid !== authUid) {
+      response.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    const user = await UserModel.findOne({ uid: authUid });
 
     if (!user) {
       response.status(404).json({ error: "User not found" });

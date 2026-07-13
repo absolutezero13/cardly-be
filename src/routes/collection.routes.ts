@@ -8,10 +8,11 @@ import {
   updateCollection,
 } from "../controllers/collection.controller";
 import { requireDb } from "../middleware/requireDb";
+import { verifyIdToken } from "../middleware/verifyIdToken";
 
 const collectionRouter = Router();
 
-collectionRouter.use(requireDb);
+collectionRouter.use(verifyIdToken, requireDb);
 collectionRouter.post("/collections", createCollection);
 collectionRouter.get("/collections", listCollections);
 collectionRouter.get("/collections/:collectionId", getCollection);

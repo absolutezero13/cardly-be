@@ -3,6 +3,7 @@ import { Error as MongooseError } from "mongoose";
 
 import { CardModel } from "../models/card.model";
 import { UserCollectionModel } from "../models/user-collection.model";
+import { getAuthUid } from "../types/auth";
 
 const handleCollectionError = (
   response: Response,
@@ -26,7 +27,8 @@ export const createCollection = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const { ownerId, name } = request.body;
+    const ownerId = getAuthUid(request);
+    const { name } = request.body;
 
     const collection = await UserCollectionModel.create({
       ownerId,
@@ -45,7 +47,7 @@ export const listCollections = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const ownerId = request.query.ownerId as string;
+    const ownerId = getAuthUid(request);
 
     const collections = await UserCollectionModel.find({ ownerId }).sort({
       isDefault: -1,
@@ -63,7 +65,7 @@ export const getCollection = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const ownerId = request.query.ownerId as string;
+    const ownerId = getAuthUid(request);
     const { collectionId } = request.params;
 
     const collection = await UserCollectionModel.findOne({
@@ -87,7 +89,7 @@ export const updateCollection = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const ownerId = request.query.ownerId as string;
+    const ownerId = getAuthUid(request);
     const { collectionId } = request.params;
     const { name } = request.body;
 
@@ -113,7 +115,7 @@ export const deleteCollection = async (
   response: Response,
 ): Promise<void> => {
   try {
-    const ownerId = request.query.ownerId as string;
+    const ownerId = getAuthUid(request);
     const { collectionId } = request.params;
 
     const collection = await UserCollectionModel.findOne({

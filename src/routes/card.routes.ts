@@ -10,6 +10,7 @@ import {
   updateCard,
 } from "../controllers/card.controller";
 import { requireDb } from "../middleware/requireDb";
+import { verifyIdToken } from "../middleware/verifyIdToken";
 
 const MAX_CARD_IMAGE_BYTES = Number(
   process.env.MAX_CARD_IMAGE_BYTES ?? 2 * 1024 * 1024,
@@ -76,6 +77,7 @@ const uploadCardImages: RequestHandler = (request, response, next) => {
 
 const cardRouter = Router();
 
+cardRouter.use(verifyIdToken);
 cardRouter.post("/cards/scan", uploadCardImages, scanCard);
 cardRouter.post("/cards", requireDb, createCard);
 cardRouter.get("/cards", requireDb, listCards);
